@@ -14,7 +14,7 @@ class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=False, default=None)
     recipe = models.ForeignKey(
         settings.RECIPE_MODEL,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
         related_name='ingredients'
     )
 
