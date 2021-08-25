@@ -1,13 +1,13 @@
-from rest_framework.response import Response
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins
 
 from core.models import Ingredient, Recipe
 
 from recipe import serializers
 
+
 class IngredientViewSet(viewsets.GenericViewSet,
-                            mixins.ListModelMixin,
-                            mixins.CreateModelMixin):
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin):
     """Manage ingredients in the database"""
     queryset = Ingredient.objects.all()
     serializer_class = serializers.IngredientSerializer
@@ -15,6 +15,7 @@ class IngredientViewSet(viewsets.GenericViewSet,
     def perform_create(serializer):
         """Create a new object"""
         serializer.save()
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""

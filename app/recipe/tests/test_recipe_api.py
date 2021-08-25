@@ -1,7 +1,3 @@
-import tempfile
-import os
-
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -15,9 +11,11 @@ from recipe.serializers import RecipeSerializer, IngredientSerializer
 
 RECIPES_URL = reverse('recipe:recipe-list')
 
+
 def detail_url(recipe_id):
     """Return recipe detail URL"""
     return reverse('recipe:recipe-detail', args=[recipe_id])
+
 
 def sample_recipe(**params):
     """Create and return a sample recipe"""
@@ -29,6 +27,7 @@ def sample_recipe(**params):
 
     return Recipe.objects.create(**defaults)
 
+
 def sample_ingredient(**params):
     """Create and return a sample ingredient"""
     defaults = {
@@ -37,6 +36,7 @@ def sample_ingredient(**params):
     defaults.update(params)
 
     return defaults
+
 
 class RecipeAPITests(TestCase):
     """Test the recipe API"""
@@ -59,14 +59,13 @@ class RecipeAPITests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_recipe_by_id(self):
-       """Test retrieving a single recipe by id"""
-       recipe = sample_recipe()
+        """Test retrieving a single recipe by id"""
+        recipe = sample_recipe()
 
-       res = self.client.get(detail_url(recipe.id))
-       serializer = RecipeSerializer(recipe)
-       self.assertEqual(res.status_code, status.HTTP_200_OK)
-       self.assertEqual(serializer.data, res.data)
-
+        res = self.client.get(detail_url(recipe.id))
+        serializer = RecipeSerializer(recipe)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(serializer.data, res.data)
 
     def test_create_basic_recipe(self):
         """Test creating a recipe"""
@@ -80,7 +79,6 @@ class RecipeAPITests(TestCase):
         recipe = Recipe.objects.get(id=res.data['id'])
         for key in payload.keys():
             self.assertEqual(payload[key], getattr(recipe, key))
-
 
     def test_create_recipe_with_ingredients(self):
         """Test creating a recipe with ingredients"""
@@ -101,8 +99,12 @@ class RecipeAPITests(TestCase):
         ingredients = recipe.ingredients.all().order_by('id')
         ingredient_serializer = IngredientSerializer(ingredients, many=True)
         self.assertEqual(ingredients.count(), 2)
-        self.assertEqual(ingredient1['name'], ingredient_serializer.data[0]['name'])
-        self.assertEqual(ingredient2['name'], ingredient_serializer.data[1]['name'])
+        self.assertEqual(
+            ingredient1['name'], ingredient_serializer.data[0]['name']
+        )
+        self.assertEqual(
+            ingredient2['name'], ingredient_serializer.data[1]['name']
+        )
 
     def test_recipe_update_add_ingredient(self):
         """Test updating a recipe with an ingredient"""
@@ -110,7 +112,7 @@ class RecipeAPITests(TestCase):
 
         payload = {
             'name': 'Yummy scrummy chicken',
-            'description':'Wow this tastes good',
+            'description': 'Wow this tastes good',
             'ingredients': [
                 {'name': 'Chicken'}
             ]
@@ -124,7 +126,6 @@ class RecipeAPITests(TestCase):
         ingredients = recipe.ingredients.all()
         self.assertEqual(recipe.name, res.data['name'], )
         self.assertEqual(len(ingredients), 1)
-
 
         for ingredient in ingredients:
             self.assertIn(ingredient.name, 'Chicken')
@@ -176,7 +177,7 @@ class RecipeAPITests(TestCase):
 
     def test_searching_for_a_recipe_by_name(self):
         """Test searching for a recipe by name where the recipe matches"""
-        recipe = sample_recipe(name='Quesadilla')
+        sample_recipe(name='Quesadilla')
 
         res = self.client.get(RECIPES_URL, {'name': 'Que'})
 
@@ -184,8 +185,11 @@ class RecipeAPITests(TestCase):
         self.assertEqual(len(res.data), 1)
 
     def test_searching_for_a_recipe_by_name_no_match(self):
-        """Test searching for a recipe by name where the recipe does not match"""
-        recipe = sample_recipe(name='Quesadilla')
+        """
+            Test searching for a recipe by name
+            where the recipe does not match
+        """
+        sample_recipe(name='Quesadilla')
 
         res = self.client.get(RECIPES_URL, {'name': 'Piz'})
 

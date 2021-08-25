@@ -1,6 +1,7 @@
 from django.test import TestCase
 from core.models import Recipe, Ingredient
 
+
 def sample_recipe(**params):
     """Create a sample recipe"""
     defaults = {
@@ -10,6 +11,7 @@ def sample_recipe(**params):
     defaults.update(params)
 
     return Recipe.objects.create(**defaults)
+
 
 class ModelTests(TestCase):
 
@@ -21,7 +23,6 @@ class ModelTests(TestCase):
             recipe=sample_recipe()
         )
         self.assertEqual(str(ingredient), ingredient.name)
-
 
     def test_recipe_str(self):
         """Test the recipe string representation"""
