@@ -104,28 +104,59 @@ class RecipeAPITests(TestCase):
         self.assertEqual(ingredient1['name'], ingredient_serializer.data[0]['name'])
         self.assertEqual(ingredient2['name'], ingredient_serializer.data[1]['name'])
 
-    def test_recipe_update(self):
-        """Test updating a recipe with ingredients"""
+    def test_recipe_update_add_ingredient(self):
+        """Test updating a recipe with an ingredient"""
         recipe = sample_recipe()
-        ingredient = Ingredient.objects.create(
-            name='Paprika',
-            recipe=recipe
-        )
 
         payload = {
             'name': 'Yummy scrummy chicken',
-            'ingredients': [ingredient]
+            'description':'Wow this tastes good',
+            'ingredients': [
+                {'name': 'Chicken'}
+            ]
         }
 
         url = detail_url(recipe.id)
-        self.client.patch(url, payload)
+        self.client.patch(url, data=payload, format='json')
         res = self.client.get(url)
 
         recipe.refresh_from_db()
         ingredients = recipe.ingredients.all()
         self.assertEqual(recipe.name, res.data['name'], )
         self.assertEqual(len(ingredients), 1)
-        self.assertIn(ingredient, ingredients)
+
+
+        for ingredient in ingredients:
+            self.assertIn(ingredient.name, 'Chicken')
+
+    def test_recipe_update_add_ingredients(self):
+        """Test updating a recipe with new ingredients"""
+        recipe = sample_recipe()
+        ingredient = Ingredient.objects.create(
+            name='Basil',
+            recipe=recipe
+        )
+        recipe.ingredients.add(ingredient)
+        payload = {
+            'ingredients': [
+                {'name': 'Basil'},
+                {'name': 'Chicken'}
+            ]
+        }
+
+        url = detail_url(recipe.id)
+        self.client.patch(url, data=payload, format='json')
+        res = self.client.get(url)
+
+        recipe.refresh_from_db()
+
+        res_recipe = res.data
+        ingredients = res_recipe['ingredients']
+
+        self.assertEqual(recipe.name, res.data['name'], )
+        self.assertEqual(len(ingredients), 2)
+        for ingredient in ingredients:
+            self.assertIn(ingredient['name'], 'Chicken Basil')
 
     def test_recipe_deletion(self):
         """Test deleting a recipe"""
@@ -142,3 +173,21 @@ class RecipeAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Recipe.objects.count(), 0)
         self.assertEqual(Ingredient.objects.count(), 0)
+
+    def test_searching_for_a_recipe_by_name(self):
+        """Test searching for a recipe by name where the recipe matches"""
+        recipe = sample_recipe(name='Quesadilla')
+
+        res = self.client.get(RECIPES_URL, {'name': 'Que'})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_searching_for_a_recipe_by_name_no_match(self):
+        """Test searching for a recipe by name where the recipe does not match"""
+        recipe = sample_recipe(name='Quesadilla')
+
+        res = self.client.get(RECIPES_URL, {'name': 'Piz'})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 0)

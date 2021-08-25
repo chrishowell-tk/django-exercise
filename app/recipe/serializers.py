@@ -23,19 +23,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Create a new recipe initially without the ingredients,
-        then add the ingredients one by one and create the PK-FK relationship.
-        - validated_data contains the payload from the POST request.
-
-        POST payload example on 'recipes/':
-        {
-            "name": "Penne carbonara",
-            "description": "Super creamy and Amazing",
-            "ingredients": [
-                {"name": "Pasta"},
-                {"name": "Carbonara sauce"}
-            ]
-        }
+        Create a new recipe without ingredients, then build up the PK-FK
+        relationship by adding ingredients to it if they exist.
         """
         ingredients_payload = validated_data.pop('ingredients', [])
 
@@ -47,6 +36,18 @@ class RecipeSerializer(serializers.ModelSerializer):
             Ingredient.objects.create(recipe=new_recipe, **ingredient)
 
         return new_recipe
+
+    def update(self, instance, validated_data):
+        """
+        Update the list of ingredients for a recipe.
+        """
+        instance.name = validated_data.get('name', instance.name)
+        Ingredient.objects.filter(recipe=instance.id).delete()
+        ingredients = validated_data.pop('ingredients')
+        for ingredient in ingredients:
+            Ingredient.objects.create(recipe=instance, **ingredient)
+        instance.save()
+        return instance
 
     class Meta:
         model = Recipe
